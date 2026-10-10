@@ -43,7 +43,7 @@ if (!isset($_SESSION['user_id']) && !in_array($current_page, $public_pages)) {
 
 // Global Site Settings (defaults)
 $site_settings = [
-    'hotel_name'            => 'Unknown',
+    'hotel_name'            => 'Pinobretel Suites',
     'primary_color'         => '#4f46e5',
     'secondary_color'       => '#64748b',
     'extra_person_cost'     => '100',

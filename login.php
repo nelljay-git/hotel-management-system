@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - <?= htmlspecialchars($site_settings['hotel_name'] ?? 'LuxeHotel') ?> Management System</title>
+    <title>Login - <?= htmlspecialchars($site_settings['hotel_name'] ?? 'Pinobretel Suites') ?> Management System</title>
     <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -187,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="login-container">
         <div class="login-header">
             <i class='bx bxs-hotel'></i>
-            <h1><?= htmlspecialchars($site_settings['hotel_name'] ?? 'LuxeHotel') ?></h1>
+            <h1><?= htmlspecialchars($site_settings['hotel_name'] ?? 'Pinobretel Suites') ?></h1>
             <p>Management System Portal</p>
         </div>
 
@@ -212,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </form>
 
         <div class="footer-text">
-            &copy; <?= date('Y') ?> <?= htmlspecialchars($site_settings['hotel_name'] ?? 'LuxeHotel') ?> Management System. Secure Access only.
+            &copy; <?= date('Y') ?> <?= htmlspecialchars($site_settings['hotel_name'] ?? 'Pinobretel Suites') ?> Management System. Secure Access only.
         </div>
     </div>
 

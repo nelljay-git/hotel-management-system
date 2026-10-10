@@ -19,7 +19,7 @@ if (isset($pdo)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($site_settings['hotel_name'] ?? 'LuxeHotel') ?> Management System</title>
+    <title><?= htmlspecialchars($site_settings['hotel_name'] ?? 'Pinobretel Suites') ?> Management System</title>
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Boxicons for Modern Vector Icons -->
@@ -50,7 +50,7 @@ if (isset($pdo)) {
         <?php else: ?>
             <i class='bx bx-building-house'></i>
         <?php endif; ?>
-        <span><?= htmlspecialchars($site_settings['hotel_name'] ?? 'LuxeHotel') ?></span>
+        <span><?= htmlspecialchars($site_settings['hotel_name'] ?? 'Pinobretel Suites') ?></span>
     </div>
     <ul class="nav-links">
         <li>

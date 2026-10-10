@@ -56,7 +56,7 @@ if ($bill['checkin_id']) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Receipt - INV-10<?= $bill['id'] ?> | <?= htmlspecialchars($settings['hotel_name'] ?? 'LuxeHotel') ?></title>
+    <title>Receipt - INV-10<?= $bill['id'] ?> | <?= htmlspecialchars($settings['hotel_name'] ?? 'Pinobretel Suites') ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -116,7 +116,7 @@ if ($bill['checkin_id']) {
 
 <div class="receipt-wrapper">
     <div class="receipt-header">
-        <h1>&#127970; <?= htmlspecialchars(strtoupper($settings['hotel_name'] ?? 'LuxeHotel')) ?></h1>
+        <h1>&#127970; <?= htmlspecialchars(strtoupper($settings['hotel_name'] ?? 'Pinobretel Suites')) ?></h1>
         <p>Official Payment Receipt</p>
         <div class="inv-badge">INV-10<?= $bill['id'] ?></div>
     </div>
@@ -222,7 +222,7 @@ if ($bill['checkin_id']) {
     </div>
 
     <div class="receipt-footer">
-        <p>Thank you for staying with us at <strong><?= htmlspecialchars($settings['hotel_name'] ?? 'LuxeHotel') ?></strong>!</p>
+        <p>Thank you for staying with us at <strong><?= htmlspecialchars($settings['hotel_name'] ?? 'Pinobretel Suites') ?></strong>!</p>
         <p>We hope to see you again soon. &#128149;</p>
         <p style="margin-top:8px; font-size:0.7rem; color:#cbd5e1;">This is a computer-generated receipt and requires no signature.</p>
     </div>

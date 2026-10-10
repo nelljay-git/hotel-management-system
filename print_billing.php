@@ -7,7 +7,7 @@ try {
     $sRows = $pdo->query("SELECT setting_key, setting_value FROM hotel_settings")->fetchAll();
     foreach ($sRows as $sr) { $settings[$sr['setting_key']] = $sr['setting_value']; }
 } catch (Exception $e) {}
-$hotel_name = $settings['hotel_name'] ?? 'LuxeHotel';
+$hotel_name = $settings['hotel_name'] ?? 'Pinobretel Suites';
 
 $selected_date = $_GET['date'] ?? null;
 $selected_month = $_GET['month'] ?? null;

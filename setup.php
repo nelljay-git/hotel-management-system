@@ -173,7 +173,7 @@ try {
         INSERT INTO hotel_settings (setting_key, setting_value) VALUES
             ('extra_person_cost',     '100'),
             ('extension_hourly_cost', '100'),
-            ('hotel_name',            'LuxeHotel'),
+            ('hotel_name',            'Pinobretel Suites'),
             ('primary_color',         '#4f46e5'),
             ('secondary_color',       '#64748b')
     ");

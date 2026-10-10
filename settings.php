@@ -15,7 +15,7 @@ try {
         ('extra_person_cost', '100'),
         ('extension_hourly_cost', '100'),
         ('booking_buffer_time', '30'),
-        ('hotel_name', 'LuxeHotel'),
+        ('hotel_name', 'Pinobretel Suites'),
         ('hotel_logo', ''),
         ('primary_color', '#4f46e5'),
         ('secondary_color', '#64748b')");
@@ -186,7 +186,7 @@ include 'header.php';
             <div class="form-group">
                 <label>Hotel Name / Web App Name</label>
                 <input type="text" name="hotel_name" class="form-control" 
-                       value="<?= htmlspecialchars($settings['hotel_name'] ?? 'LuxeHotel') ?>" required>
+                       value="<?= htmlspecialchars($settings['hotel_name'] ?? 'Pinobretel Suites') ?>" required>
             </div>
             
             <div class="form-group">

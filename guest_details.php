@@ -90,7 +90,7 @@ include 'header.php';
         <div class="right-side">
             <div class="box-topic">Total Stays</div>
             <div class="number"><?= $visits ?></div>
-            <div class="indicator" style="font-size: 12px; color: #666;">Times visited <?= htmlspecialchars($site_settings['hotel_name'] ?? 'LuxeHotel') ?></div>
+            <div class="indicator" style="font-size: 12px; color: #666;">Times visited <?= htmlspecialchars($site_settings['hotel_name'] ?? 'Pinobretel Suites') ?></div>
         </div>
         <i class='bx bx-hotel' style="background: #fdf2f8; color: #db2777;"></i>
     </div>
