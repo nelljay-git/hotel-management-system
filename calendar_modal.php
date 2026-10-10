@@ -32,8 +32,8 @@
     </div>
 </div>
 
-<!-- FullCalendar Library -->
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+<!-- FullCalendar Library (local, offline-compatible) -->
+<script src='js/vendor/fullcalendar.min.js'></script>
 <script>
     let calendar;
     

@@ -41,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - <?= htmlspecialchars($site_settings['hotel_name'] ?? 'Pinobretel Suites') ?> Management System</title>
-    <link href='https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css' rel='stylesheet'>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href='css/vendor/boxicons.min.css' rel='stylesheet'>
+    <link href="css/fonts.css" rel="stylesheet">
     <style>
         :root {
             --primary: <?= $site_settings['primary_color'] ?? '#4f46e5' ?>;

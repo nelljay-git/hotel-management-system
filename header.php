@@ -20,10 +20,10 @@ if (isset($pdo)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($site_settings['hotel_name'] ?? 'Pinobretel Suites') ?> Management System</title>
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Boxicons for Modern Vector Icons -->
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <!-- Local Fonts: Inter + Outfit (offline-compatible) -->
+    <link href="css/fonts.css" rel="stylesheet">
+    <!-- Boxicons (local, offline-compatible) -->
+    <link href='css/vendor/boxicons.min.css' rel='stylesheet'>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
     <style>

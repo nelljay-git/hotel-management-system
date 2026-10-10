@@ -57,8 +57,8 @@ foreach($bills as $b) {
 <head>
     <meta charset="UTF-8">
     <title><?= $report_title ?> | <?= htmlspecialchars($hotel_name) ?></title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="css/fonts.css" rel="stylesheet">
+    <link href='css/vendor/boxicons.min.css' rel='stylesheet'>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; padding: 40px; }
