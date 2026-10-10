@@ -32,6 +32,11 @@ if ($selected_month) {
     $period_label = date('M d, Y', strtotime($selected_date));
 }
 
+// Quick-pick presets (all map to the existing ?date= / ?month= filters)
+$today_str = date('Y-m-d');
+$yesterday_str = date('Y-m-d', strtotime('-1 day'));
+$this_month_str = date('Y-m');
+
 // 1. Fetch Revenue Summary for the selected period
 // We count revenue as anything 'Paid' within that specific period (paid_at)
 $stmt = $pdo->prepare("
@@ -59,50 +64,72 @@ $pending_revenue = $stmt->fetchColumn() ?? 0;
 include 'header.php';
 ?>
 
-<div class="card-panel">
-    <div class="card-panel-header">
-        <h2>Financial Revenue Report</h2>
-        <form method="GET" action="reports.php" class="form-row" style="margin: 0; align-items: center; gap: 10px;">
-            <div style="display: flex; gap: 10px; align-items: center; border-right: 2px solid #e2e8f0; padding-right: 15px;">
-                <label for="date" style="margin: 0; font-weight:600; color: #64748b;">Daily:</label>
-                <input type="date" name="date" id="date" class="form-control" value="<?= $selected_date ?>" onchange="document.getElementById('month').value=''; this.form.submit()" style="width: auto;">
-            </div>
-            <div style="display: flex; gap: 10px; align-items: center; padding-left: 5px;">
-                <label for="month" style="margin: 0; font-weight:600; color: #64748b;">Monthly:</label>
-                <input type="month" name="month" id="month" class="form-control" value="<?= $selected_month ?>" onchange="document.getElementById('date').value=''; this.form.submit()" style="width: auto;">
-            </div>
-            <noscript><button type="submit" class="btn btn-primary btn-sm">Filter</button></noscript>
-        </form>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+    <div>
+        <h2 style="margin:0; font-size:1.8rem; font-weight:700; color:var(--dark);">Revenue Reports</h2>
+        <p style="margin:4px 0 0 0; color:#64748b; font-size:0.9rem;">
+            <?= $selected_month ? 'Showing money received in <strong>' . $period_label . '</strong>' : 'Showing money received on <strong>' . $period_label . '</strong>' ?>
+        </p>
     </div>
+</div>
+
+<style>
+    .period-pill { display:inline-block; border:2px solid #e2e8f0; background:#fff; color:#475569; font-weight:600; font-size:0.82rem; border-radius:20px; padding:6px 16px; text-decoration:none; transition:all .15s; }
+    .period-pill:hover { border-color:var(--primary); color:var(--primary); }
+    .period-pill.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .pay-line { font-size:0.78rem; color:#475569; line-height:1.6; }
+    .pay-line strong { color:var(--dark); }
+</style>
+
+<div class="card-panel">
+    <div class="card-panel-header" style="flex-wrap:wrap; gap:10px;">
+        <h2><i class='bx bx-calendar' style="color:var(--primary);"></i> Pick a Time Period</h2>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+        <a class="period-pill <?= (!$selected_month && $selected_date === $today_str) ? 'active' : '' ?>" href="reports.php?date=<?= $today_str ?>">Today</a>
+        <a class="period-pill <?= (!$selected_month && $selected_date === $yesterday_str) ? 'active' : '' ?>" href="reports.php?date=<?= $yesterday_str ?>">Yesterday</a>
+        <a class="period-pill <?= ($selected_month === $this_month_str) ? 'active' : '' ?>" href="reports.php?month=<?= $this_month_str ?>">This Month</a>
+    </div>
+    <form method="GET" action="reports.php" style="margin:12px 0 0 0; display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap;">
+        <div>
+            <label for="date" style="font-size:0.78rem; font-weight:600; color:#64748b; display:block; margin-bottom:4px;">Or pick a specific day</label>
+            <input type="date" name="date" id="date" class="form-control" value="<?= $selected_month ? '' : $selected_date ?>" onchange="document.getElementById('month').value=''; this.form.submit()" style="width:auto;">
+        </div>
+        <div>
+            <label for="month" style="font-size:0.78rem; font-weight:600; color:#64748b; display:block; margin-bottom:4px;">Or pick a whole month</label>
+            <input type="month" name="month" id="month" class="form-control" value="<?= $selected_month ?>" onchange="document.getElementById('date').value=''; this.form.submit()" style="width:auto;">
+        </div>
+        <noscript><button type="submit" class="btn btn-primary btn-sm">Filter</button></noscript>
+    </form>
 </div>
 
 <div class="overview-boxes" style="margin-top: 20px;">
     <div class="box">
         <div class="right-side">
-            <div class="box-topic">Total Revenue (Paid)</div>
+            <div class="box-topic">Money In (Paid)</div>
             <div class="number">₱<?= number_format($total_revenue, 2) ?></div>
             <div class="indicator" style="font-size: 12px; color: #666; font-weight: 600;">
-                Period: <?= $period_label ?>
+                Actually received · <?= $period_label ?>
             </div>
         </div>
         <i class='bx bx-money-withdraw' style="background: #e0f2fe; color: #0369a1;"></i>
     </div>
     <div class="box">
         <div class="right-side">
-            <div class="box-topic">Unpaid Receivables</div>
+            <div class="box-topic">Still To Collect</div>
             <div class="number">₱<?= number_format($pending_revenue, 2) ?></div>
             <div class="indicator" style="font-size: 12px; color: #ef4444; font-weight: 600;">
-                From bills created this period
+                Billed but not yet paid
             </div>
         </div>
         <i class='bx bx-time-five' style="background: #fef2f2; color: #991b1b;"></i>
     </div>
     <div class="box">
         <div class="right-side">
-            <div class="box-topic">Transactions</div>
+            <div class="box-topic">Payments Received</div>
             <div class="number"><?= $trans_count ?></div>
             <div class="indicator" style="font-size: 12px; color: #666; font-weight: 600;">
-                Successful payments
+                Successful checkouts
             </div>
         </div>
         <i class='bx bx-transfer-alt' style="background: #f0fdf4; color: #166534;"></i>
@@ -111,29 +138,24 @@ include 'header.php';
 
 <div class="card-panel" style="margin-top: 20px;">
     <div class="card-panel-header">
-        <h2>Transaction Details <span style="font-size:1rem; color:#64748b; font-weight:500;">(<?= $period_label ?>)</span></h2>
+        <h2><i class='bx bx-receipt' style="color:var(--primary);"></i> Payments List <span style="font-size:1rem; color:#64748b; font-weight:500;">(<?= $period_label ?>)</span></h2>
     </div>
     <div class="table-responsive">
         <table>
             <thead>
                 <tr>
-                    <th>Inv #</th>
-                    <th>Type</th>
+                    <th>Receipt</th>
                     <th>Guest</th>
                     <th>Room</th>
-                    <th>Original</th>
-                    <th>Base Chrg</th>
-                    <th>Extra Pers</th>
-                    <th>Ext. Hours</th>
-                    <th>Extra Svc</th>
-                    <th>Total</th>
-                    <th>Time</th>
+                    <th>What They Paid For</th>
+                    <th style="text-align:right;">Total</th>
+                    <th>Paid At</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
                 $stmt = $pdo->prepare("
-                    SELECT p.*, g.name as guest_name, r.room_number, 
+                    SELECT p.*, g.name as guest_name, r.room_number,
                            b.booking_type, b.num_guests, b.extra_charges, b.extension_hours,
                            b.duration_type, b.base_price
                     FROM hotel_payments p
@@ -146,26 +168,39 @@ include 'header.php';
                 ");
                 $stmt->execute($params);
                 $paid_rows = $stmt->fetchAll();
-                
+
                 foreach($paid_rows as $row):
                 ?>
                 <tr>
-                    <td>INV-10<?= $row['id'] ?></td>
-                    <td><span class="badge <?= $row['booking_type'] == 'Instant' ? 'badge-primary' : 'badge-warning' ?>" style="font-size: 10px;"><?= $row['booking_type'] ?></span></td>
+                    <td>
+                        <strong>INV-10<?= $row['id'] ?></strong><br>
+                        <span class="badge <?= $row['booking_type'] == 'Instant' ? 'badge-primary' : 'badge-warning' ?>" style="font-size: 10px;"><?= $row['booking_type'] ?></span>
+                    </td>
                     <td><strong><?= htmlspecialchars($row['guest_name']) ?></strong></td>
-                    <td>Room <?= $row['room_number'] ?></td>
-                    <td><small><?= $row['duration_type'] ?></small></td>
-                    <td style="text-align: right;">₱<?= number_format($row['base_price'], 2) ?></td>
-                    <td style="text-align: right;">₱<?= number_format($row['extra_charges'], 2) ?></td>
-                    <td style="text-align: center;"><?= $row['extension_hours'] ?></td>
-                    <td style="text-align: right;">₱<?= number_format($row['additional_services'], 2) ?></td>
-                    <td style="font-weight: 600; color: var(--primary); text-align: right;">₱<?= number_format($row['total_amount'], 2) ?></td>
+                    <td>Room <?= $row['room_number'] ?><br><small style="color:#64748b;"><?= $row['duration_type'] ?></small></td>
+                    <td>
+                        <div class="pay-line"><i class='bx bx-bed' style="color:var(--primary);"></i> Room stay — <strong>₱<?= number_format($row['base_price'], 2) ?></strong></div>
+                        <?php if($row['extra_charges'] > 0): ?>
+                            <div class="pay-line"><i class='bx bx-user-plus' style="color:#d97706;"></i> Extra guests — <strong>₱<?= number_format($row['extra_charges'], 2) ?></strong></div>
+                        <?php endif; ?>
+                        <?php if($row['extension_hours'] > 0): ?>
+                            <div class="pay-line"><i class='bx bx-time' style="color:#d97706;"></i> Late checkout — <strong><?= $row['extension_hours'] ?> hr<?= $row['extension_hours'] == 1 ? '' : 's' ?></strong></div>
+                        <?php endif; ?>
+                        <?php if($row['additional_services'] > 0): ?>
+                            <div class="pay-line"><i class='bx bx-receipt' style="color:#059669;"></i> Extra services — <strong>₱<?= number_format($row['additional_services'], 2) ?></strong></div>
+                        <?php endif; ?>
+                    </td>
+                    <td style="font-weight: 700; color: var(--primary); text-align: right; font-size:1.02rem;">₱<?= number_format($row['total_amount'], 2) ?></td>
                     <td><small><?= $selected_month ? date('M d, h:i A', strtotime($row['paid_at'])) : date('h:i A', strtotime($row['paid_at'])) ?></small></td>
                 </tr>
                 <?php endforeach; ?>
-                
+
                 <?php if(count($paid_rows) == 0): ?>
-                    <tr><td colspan="11" style="text-align:center; padding: 30px; color: #999;">No paid transactions found for this period.</td></tr>
+                    <tr><td colspan="6" style="text-align:center; padding:35px; color:#94a3b8;">
+                        <i class='bx bx-receipt' style="font-size:2.5rem; display:block; margin-bottom:10px;"></i>
+                        <strong>No payments received <?= $selected_month ? 'in ' . $period_label : 'on ' . $period_label ?>.</strong><br>
+                        <small>Try another period above, or record payments from the Billing page.</small>
+                    </td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
@@ -174,30 +209,34 @@ include 'header.php';
 
 <div class="card-panel" style="margin-top: 20px;">
     <div class="card-panel-header">
-        <h2>Revenue Source Breakdown</h2>
+        <h2><i class='bx bx-pie-chart-alt-2' style="color:var(--primary);"></i> Where the Money Came From</h2>
     </div>
     <div style="display: flex; gap: 20px; flex-wrap: wrap; padding: 10px;">
         <div style="flex: 1; min-width: 250px; background: #fff; border: 1px solid #e5e7eb; padding: 20px; border-radius: 12px; text-align: center;">
-            <h4 style="color: #666; margin-bottom: 10px;">Room Sales</h4>
-            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">₱<?= number_format($room_rev, 2) ?></div>
+            <h4 style="color: #666; margin-bottom: 4px;"><i class='bx bx-bed' style="color:var(--primary);"></i> Room Stays</h4>
+            <small style="color:#94a3b8;">Guests paying for rooms</small>
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary); margin-top:8px;">₱<?= number_format($room_rev, 2) ?></div>
             <div style="margin-top: 10px; height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden;">
                 <div style="width: <?= $total_revenue > 0 ? ($room_rev / $total_revenue * 100) : 0 ?>%; height: 100%; background: var(--primary);"></div>
             </div>
+            <small style="color:#64748b; font-weight:600;"><?= $total_revenue > 0 ? number_format($room_rev / $total_revenue * 100, 1) : 0 ?>% of total</small>
         </div>
         <div style="flex: 1; min-width: 250px; background: #fff; border: 1px solid #e5e7eb; padding: 20px; border-radius: 12px; text-align: center;">
-            <h4 style="color: #666; margin-bottom: 10px;">Extra Services / Fees</h4>
-            <div style="font-size: 1.5rem; font-weight: 700; color: #10b981;">₱<?= number_format($extra_rev, 2) ?></div>
+            <h4 style="color: #666; margin-bottom: 4px;"><i class='bx bx-coffee' style="color:#10b981;"></i> Extras &amp; Fees</h4>
+            <small style="color:#94a3b8;">Extra guests, extensions &amp; services</small>
+            <div style="font-size: 1.5rem; font-weight: 700; color: #10b981; margin-top:8px;">₱<?= number_format($extra_rev, 2) ?></div>
             <div style="margin-top: 10px; height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden;">
                 <div style="width: <?= $total_revenue > 0 ? ($extra_rev / $total_revenue * 100) : 0 ?>%; height: 100%; background: #10b981;"></div>
             </div>
+            <small style="color:#64748b; font-weight:600;"><?= $total_revenue > 0 ? number_format($extra_rev / $total_revenue * 100, 1) : 0 ?>% of total</small>
         </div>
     </div>
 </div>
 
 <div class="card-panel" style="margin-top: 20px;">
-    <div class="card-panel-header">
-        <h2><i class='bx bx-cart' style="color:var(--primary);"></i> Mini-bar Sales Summary</h2>
-        <span style="font-size:0.9rem; color:#64748b; font-weight:500;"><?= $period_label ?></span>
+    <div class="card-panel-header" style="flex-wrap:wrap; gap:8px;">
+        <h2><i class='bx bx-cart' style="color:var(--primary);"></i> Mini-bar Sales</h2>
+        <span style="font-size:0.85rem; color:#64748b; font-weight:500;">Snacks &amp; drinks sold to guests · <?= $period_label ?></span>
     </div>
     <?php
     $minibar_stmt = $pdo->prepare("
