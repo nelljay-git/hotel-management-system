@@ -1,0 +1,17 @@
+# Runtime SQLite database (recreated via setup.php on fresh clones)
+hotel.db
+hotel.db-wal
+hotel.db-shm
+hotel.db-journal
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Uploaded files
+uploads/*
+!uploads/.gitkeep
+
+# OS / editor noise
+Thumbs.db
+Desktop.ini
+.DS_Store
