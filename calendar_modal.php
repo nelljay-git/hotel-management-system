@@ -115,6 +115,27 @@
 
     function showEventDetails(event) {
         let p = event.extendedProps;
+        // Booking status in plain words (matches the Dashboard language)
+        const statusLabel = p.status === 'Actioned' ? 'Confirmed' : p.status;
+        const statusSub = p.status === 'Actioned' ? ' (' + p.checkin_status + ')' : '';
+        // Room state in plain words — every room status gets its own label
+        // (previously anything but Available was mislabeled as "Checked Out").
+        const roomStateMap = {
+            'Available':   { text: 'Available — ready for guests',      bg: '#10b981' },
+            'Occupied':    { text: 'Occupied — guest is inside',        bg: '#3b82f6' },
+            'Cleaning':    { text: 'Cleaning — housekeeping required',  bg: '#f59e0b' },
+            'Maintenance': { text: 'Under maintenance',                 bg: '#ef4444' }
+        };
+        const rs = roomStateMap[p.room_status] || { text: p.room_status, bg: '#64748b' };
+        // Flag contradictory data instead of showing two clashing badges
+        let mismatch = '';
+        if (p.checkin_status === 'Checked-in' && p.room_status === 'Available') {
+            mismatch = `<div style="margin-bottom:15px; padding:10px 14px; border-radius:8px; background:#fffbeb; border:1px solid #fde68a; font-size:0.82rem; color:#92400e; font-weight:500;">
+                Heads up: the guest is checked in but the room shows Available. Verify the room status on the Rooms page.</div>`;
+        } else if (p.checkin_status === 'Checked-out' && p.room_status === 'Occupied') {
+            mismatch = `<div style="margin-bottom:15px; padding:10px 14px; border-radius:8px; background:#fffbeb; border:1px solid #fde68a; font-size:0.82rem; color:#92400e; font-weight:500;">
+                Heads up: the guest checked out but the room still shows Occupied. Send it for cleaning on the Rooms page.</div>`;
+        }
         let content = `
             <div style="margin-bottom:15px;">
                 <div style="font-size:0.85rem; color:#64748b; margin-bottom:3px;">Guest Name</div>
@@ -141,15 +162,16 @@
                 </div>
             </div>
             <div style="margin-bottom:20px;">
-                <div style="font-size:0.85rem; color:#64748b; margin-bottom:3px;">Status</div>
-                <span class="badge" style="background-color:${event.backgroundColor}; padding:5px 10px; font-size:0.9rem;">${p.status} ${p.status == 'Actioned' ? '(' + p.checkin_status + ')' : ''}</span>
+                <div style="font-size:0.85rem; color:#64748b; margin-bottom:3px;">Booking Status</div>
+                <span class="badge" style="background-color:${event.backgroundColor}; padding:5px 10px; font-size:0.9rem;">${statusLabel}${statusSub}</span>
             </div>
             <div style="margin-bottom:20px;">
                 <div style="font-size:0.85rem; color:#64748b; margin-bottom:3px;">Room State</div>
-                <span class="badge" style="background:${p.room_status === 'Available' ? '#10b981' : '#f59e0b'}; padding:5px 10px; font-size:0.9rem;">
-                    ${p.room_status === 'Available' ? 'Available' : 'Checked Out (Housekeeping Required)'}
+                <span class="badge" style="background:${rs.bg}; padding:5px 10px; font-size:0.9rem;">
+                    ${rs.text}
                 </span>
             </div>
+            ${mismatch}
             <hr style="border:0; border-top:1px solid #e2e8f0; margin-bottom:15px;">
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 ${p.status === 'Pending' ? `<a href="checkin.php?booking_id=${p.booking_id}" class="btn btn-primary btn-sm"><i class='bx bx-check'></i> Check In</a>` : ''}
