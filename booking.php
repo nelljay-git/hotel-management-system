@@ -245,22 +245,6 @@ include 'header.php';
     </div>
     
     <form method="POST" action="booking.php" id="booking_form">
-        <style>
-            .bk-step { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--primary); margin:16px 0 8px; }
-            .bk-step:first-of-type { margin-top:0; }
-            .dur-grid { display:flex; gap:10px; flex-wrap:wrap; }
-            .dur-card { flex:1 1 110px; border:2px solid #e2e8f0; border-radius:10px; padding:10px 6px; text-align:center; cursor:pointer; background:#f8fafc; transition:border-color .15s, transform .15s, background .15s; }
-            .dur-card:hover { border-color:var(--primary); transform:translateY(-2px); }
-            .dur-card.selected { border-color:var(--primary); background:rgba(var(--primary-rgb), 0.07); box-shadow:var(--shadow-sm); }
-            .dur-card.disabled { opacity:0.4; cursor:not-allowed; transform:none; }
-            .dur-card i { font-size:1.5rem; color:var(--primary); display:block; }
-            .dur-card span { display:block; font-weight:700; font-size:0.85rem; color:var(--dark); margin-top:2px; }
-            .dur-card small { display:block; font-size:0.68rem; color:#64748b; margin-top:2px; }
-            .f-pill { display:inline-block; border:2px solid #e2e8f0; background:#fff; color:#475569; font-weight:600; font-size:0.78rem; border-radius:20px; padding:4px 14px; text-decoration:none; transition:all .15s; }
-            .f-pill:hover { border-color:var(--primary); color:var(--primary); }
-            .f-pill.active { background:var(--primary); border-color:var(--primary); color:#fff; }
-        </style>
-        <div class="bk-step">Step 1 — Who's booking?</div>
         <div class="form-row">
             <div class="form-group">
                 <label>Guest Full Name</label>
@@ -272,29 +256,18 @@ include 'header.php';
             </div>
         </div>
         
-        <div class="bk-step">Step 2 — When &amp; how long?</div>
         <div class="form-row">
             <div class="form-group">
-                <label>Check-in Date & Time</label>
+                <label style="display:flex; justify-content:space-between; align-items:center;">
+                    <span>Check-in Date &amp; Time</span>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="snapCheckInToNow()" title="Reset to the current time"><i class='bx bx-time'></i> Now</button>
+                </label>
                 <input type="datetime-local" name="check_in_time" id="check_in_time" class="form-control" required>
+                <small id="stale_time_hint" style="display:none; color:#b45309; font-weight:600; margin-top:4px;"><i class='bx bxs-error-circle'></i> That time already passed — <a href="#" onclick="snapCheckInToNow(); return false;" style="color:var(--primary); font-weight:700;">use current time</a>?</small>
             </div>
-            <div class="form-group" style="flex:2;">
-                <label>How long are they staying? — click one</label>
-                <div class="dur-grid" id="duration_cards">
-                    <div class="dur-card" data-value="22 Hours" onclick="selectDuration('22 Hours')">
-                        <i class='bx bx-time'></i><span>22 Hours</span><small>Short stay</small>
-                    </div>
-                    <div class="dur-card" data-value="1 Day" onclick="selectDuration('1 Day')">
-                        <i class='bx bx-sun'></i><span>1 Day</span><small>Full 24 hours</small>
-                    </div>
-                    <div class="dur-card" data-value="2 Days" onclick="selectDuration('2 Days')">
-                        <i class='bx bx-moon'></i><span>2 Days</span><small>Full 48 hours</small>
-                    </div>
-                    <div class="dur-card" data-value="Custom" onclick="selectDuration('Custom')">
-                        <i class='bx bx-slider'></i><span>Custom</span><small>You pick checkout</small>
-                    </div>
-                </div>
-                <select name="duration_type" id="duration_type" style="display:none;" onchange="onDurationChange()">
+            <div class="form-group">
+                <label>Duration of Stay</label>
+                <select name="duration_type" id="duration_type" class="form-select" required onchange="onDurationChange()">
                     <option value="" disabled selected>-- Select Duration --</option>
                     <option value="22 Hours">22 Hours</option>
                     <option value="1 Day">1 Day Rate</option>
@@ -308,7 +281,6 @@ include 'header.php';
             </div>
         </div>
 
-        <div class="bk-step">Step 3 — Which room &amp; how many guests?</div>
         <div class="form-row">
             <div class="form-group">
                 <label>Assign Available Room</label>
@@ -347,7 +319,6 @@ include 'header.php';
             </div>
         </div>
 
-        <div class="bk-step">Step 4 — Payment</div>
         <div class="form-row">
             <div class="form-group">
                 <label>Payment Status</label>
@@ -375,11 +346,13 @@ include 'header.php';
     <div class="card-panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
         <h2 style="margin: 0;">All Active Bookings</h2>
         <?php $filter_status = $_GET['filter_status'] ?? 'All'; ?>
-        <div style="display:flex; gap:8px;">
-            <a class="f-pill <?= $filter_status === 'All' ? 'active' : '' ?>" href="booking.php?filter_status=All">All</a>
-            <a class="f-pill <?= $filter_status === 'Pending' ? 'active' : '' ?>" href="booking.php?filter_status=Pending">Pending</a>
-            <a class="f-pill <?= $filter_status === 'Actioned' ? 'active' : '' ?>" href="booking.php?filter_status=Actioned">Actioned</a>
-        </div>
+        <form method="GET" action="booking.php" style="margin: 0;">
+            <select name="filter_status" class="form-select" onchange="this.form.submit()" style="width: auto; display: inline-block; padding: 5px 10px;">
+                <option value="All" <?= $filter_status === 'All' ? 'selected' : '' ?>>All Statuses</option>
+                <option value="Pending" <?= $filter_status === 'Pending' ? 'selected' : '' ?>>Pending</option>
+                <option value="Actioned" <?= $filter_status === 'Actioned' ? 'selected' : '' ?>>Actioned</option>
+            </select>
+        </form>
     </div>
     <div class="table-responsive">
         <table>
@@ -390,7 +363,7 @@ include 'header.php';
                     <th>Room #</th>
                     <th>Room Type</th>
                     <th>Check In Time</th>
-                    <th>Stay Details</th>
+                    <th>Duration / Type</th>
                     <th>Payment</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -454,10 +427,7 @@ include 'header.php';
                 </tr>
                 <?php endforeach; ?>
                 <?php if(count($all_bookings) == 0): ?>
-                    <tr><td colspan="9" style="text-align:center; padding:35px; color:#94a3b8;">
-                        <i class='bx bx-calendar-x' style="font-size:2.5rem; display:block; margin-bottom:10px;"></i>
-                        <strong>No bookings here yet.</strong><br><small>Fill in the form above to create your first booking.</small>
-                    </td></tr>
+                    <tr><td colspan="9" style="text-align:center; padding: 25px;">No bookings found.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
@@ -470,10 +440,11 @@ include 'header.php';
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('check_in_time').value = now.toISOString().slice(0, 16);
+        lastAutoCheckIn = document.getElementById('check_in_time').value;
         onDurationChange();
         syncRoomPicker();
-        syncDurationCards();
         updateInstantCheckinButton();
+        checkStaleTime();
     });
 
     function updateInstantCheckinButton() {
@@ -492,6 +463,57 @@ include 'header.php';
             instantBtn.style.display = 'none';
         }
     }
+
+    // ── Stale check-in time guard ─────────────────────────────────────
+    // The field is stamped on page load; if the user idles, it silently
+    // goes out of date. We auto-refresh it while untouched, and warn if
+    // the chosen time is already in the past.
+    let checkInTouched = false;   // true once the user picks a time manually
+    let suppressTouch = false;    // true during our own programmatic updates
+    let lastAutoCheckIn = '';
+
+    function currentLocalInput() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        return now.toISOString().slice(0, 16);
+    }
+
+    function setCheckInAndRefresh(value, touched) {
+        const input = document.getElementById('check_in_time');
+        if (!input) return;
+        suppressTouch = true;
+        input.value = value;
+        input.dispatchEvent(new Event('change'));
+        suppressTouch = false;
+        if (touched) checkInTouched = true;
+        lastAutoCheckIn = value;
+        checkStaleTime();
+    }
+
+    function snapCheckInToNow() {
+        setCheckInAndRefresh(currentLocalInput(), true);
+    }
+
+    function checkStaleTime() {
+        const input = document.getElementById('check_in_time');
+        const hint = document.getElementById('stale_time_hint');
+        if (!input || !input.value || !hint) return;
+        const selected = new Date(input.value).getTime();
+        hint.style.display = (selected < Date.now() - 60000) ? 'block' : 'none';
+    }
+
+    // Every 30s: keep the field fresh until the user takes over.
+    setInterval(() => {
+        if (checkInTouched) { checkStaleTime(); return; }
+        const input = document.getElementById('check_in_time');
+        if (!input || !input.value || document.hidden) { checkStaleTime(); return; }
+        const fresh = currentLocalInput();
+        if (fresh !== input.value) {
+            setCheckInAndRefresh(fresh, false);
+        } else {
+            checkStaleTime();
+        }
+    }, 30000);
 
     // ── Visual Room Picker Modal ──────────────────────────────────────
     // The hidden #room_id select remains the single source of truth so all
@@ -616,25 +638,6 @@ include 'header.php';
         updateSelectedRoomDisplay();
         closeRoomPicker();
         calculateCheckout(true);
-    }
-
-    // ── Visual Duration Picker ────────────────────────────────────────
-    // The hidden #duration_type select stays the source of truth so all
-    // existing logic (onDurationChange, pricing) works unchanged.
-    function selectDuration(value) {
-        const durationSelect = document.getElementById('duration_type');
-        const opt = Array.from(durationSelect.options).find(o => o.value === value);
-        if (!opt || opt.disabled) return;
-        durationSelect.value = value;
-        syncDurationCards();
-        onDurationChange();
-    }
-
-    function syncDurationCards() {
-        const current = document.getElementById('duration_type').value;
-        document.querySelectorAll('.dur-card').forEach(card => {
-            card.classList.toggle('selected', card.dataset.value === current);
-        });
     }
 
     document.addEventListener('keydown', function(e) {
@@ -767,7 +770,6 @@ include 'header.php';
         }
         
         updateAvailableRooms();
-        syncDurationCards();
     }
 
     function updateDurationOptions() {
@@ -803,12 +805,6 @@ include 'header.php';
             durationSelect.value = '2 Days';
             onDurationChange();
         }
-
-        // Mirror unavailable durations onto the visual cards
-        Array.from(durationSelect.options).forEach(opt => {
-            const card = document.querySelector('.dur-card[data-value="' + opt.value + '"]');
-            if (card) card.classList.toggle('disabled', opt.disabled);
-        });
     }
 
     function calculateCheckout(isRoomChange = false) {
@@ -903,6 +899,7 @@ include 'header.php';
         }
     }
     document.getElementById('check_in_time').addEventListener('change', () => {
+        if (!suppressTouch) checkInTouched = true;
         if (document.getElementById('duration_type').value === 'Custom') {
             // Adjust custom checkout time relative to new check-in time
             const check_in = document.getElementById('check_in_time').value;
@@ -917,6 +914,7 @@ include 'header.php';
         }
         updateAvailableRooms();
         updateInstantCheckinButton();
+        checkStaleTime();
     });
     document.getElementById('duration_type').addEventListener('change', () => onDurationChange());
     document.getElementById('room_id').addEventListener('change', () => calculateCheckout(true));
@@ -924,12 +922,6 @@ include 'header.php';
         if (e.target === this) closeRoomPicker();
     });
     document.getElementById('booking_form').addEventListener('submit', function(e) {
-        if (!document.getElementById('duration_type').value) {
-            e.preventDefault();
-            alert('Please choose how long the stay is first (Step 2).');
-            document.getElementById('duration_cards').scrollIntoView({behavior: 'smooth', block: 'center'});
-            return;
-        }
         if (!document.getElementById('room_id').value) {
             e.preventDefault();
             openRoomPicker();
