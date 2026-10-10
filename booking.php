@@ -244,7 +244,7 @@ include 'header.php';
         <h2>Make a Reservation</h2>
     </div>
     
-    <form method="POST" action="booking.php">
+    <form method="POST" action="booking.php" id="booking_form">
         <div class="form-row">
             <div class="form-group">
                 <label>Guest Full Name</label>
@@ -281,13 +281,20 @@ include 'header.php';
             <div class="form-group">
                 <label>Assign Available Room</label>
                 <small id="room_hint" style="color: #e67e22; font-weight: 500; display: block; margin-bottom: 4px;"><i class='bx bx-info-circle'></i> Please select a Duration of Stay first.</small>
-                <select name="room_id" id="room_id" class="form-select" required onchange="calculateCheckout(true)" disabled style="opacity:0.5; cursor:not-allowed;">
+                <div id="room_picker_row" style="display:flex; gap:10px; align-items:stretch;">
+                    <div id="selected_room_display" style="flex:1; padding:10px 14px; border:2px dashed #cbd5e1; border-radius:8px; background:#f8fafc; font-weight:600; color:#64748b; display:flex; align-items:center;">
+                        No room selected
+                    </div>
+                    <button type="button" id="choose_room_btn" class="btn btn-secondary" onclick="openRoomPicker()" disabled style="opacity:0.5; cursor:not-allowed; white-space:nowrap;"><i class='bx bx-bed'></i> Choose Room</button>
+                </div>
+                <select name="room_id" id="room_id" style="display:none;" onchange="calculateCheckout(true)" disabled>
                     <option value="" disabled selected>-- Select an Available Room --</option>
                     <?php
                     $rooms = $pdo->query("SELECT * FROM hotel_rooms WHERE status = 'Available' ORDER BY room_number ASC")->fetchAll();
                     foreach($rooms as $r):
                     ?>
-                        <option value="<?= $r['id'] ?>" 
+                        <option value="<?= $r['id'] ?>"
+                                data-number="<?= htmlspecialchars($r['room_number']) ?>"
                                 data-type="<?= $r['room_type'] ?>"
                                 data-capacity="<?= $r['capacity'] ?>"
                                 data-p3="<?= $r['price_3h'] ?>"
@@ -430,6 +437,7 @@ include 'header.php';
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('check_in_time').value = now.toISOString().slice(0, 16);
         onDurationChange();
+        syncRoomPicker();
         updateInstantCheckinButton();
     });
 
@@ -449,6 +457,135 @@ include 'header.php';
             instantBtn.style.display = 'none';
         }
     }
+
+    // ── Visual Room Picker Modal ──────────────────────────────────────
+    // The hidden #room_id select remains the single source of truth so all
+    // existing pricing/validation logic keeps working unchanged.
+    function readRoomsFromSelect() {
+        const roomSelect = document.getElementById('room_id');
+        const rooms = [];
+        Array.from(roomSelect.options).forEach(opt => {
+            if (!opt.value) return;
+            rooms.push({
+                id: opt.value,
+                room_number: opt.getAttribute('data-number') || '',
+                room_type: opt.getAttribute('data-type') || '',
+                capacity: opt.getAttribute('data-capacity') || '',
+                price_3h: opt.getAttribute('data-p3'),
+                price_6h: opt.getAttribute('data-p6'),
+                price_12h: opt.getAttribute('data-p12'),
+                price_24h: opt.getAttribute('data-p24')
+            });
+        });
+        return rooms;
+    }
+
+    function escapeHtml(s) {
+        return String(s === null || s === undefined ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function roomPriceForDuration(r, duration) {
+        if (duration === '22 Hours') return { value: r.price_3h, label: '22 hrs' };
+        if (duration === '1 Day') return { value: r.price_6h, label: '24 hrs' };
+        if (duration === '2 Days') return { value: r.price_12h, label: '48 hrs' };
+        return { value: r.price_24h, label: '/ night' };
+    }
+
+    function updateSelectedRoomDisplay() {
+        const roomSelect = document.getElementById('room_id');
+        const display = document.getElementById('selected_room_display');
+        if (!display) return;
+        if (roomSelect.value) {
+            const opt = roomSelect.options[roomSelect.selectedIndex];
+            const num = opt ? (opt.getAttribute('data-number') || '') : '';
+            const type = opt ? (opt.getAttribute('data-type') || '') : '';
+            display.innerHTML = '<i class=\'bx bx-bed\' style="color:var(--primary); margin-right:6px;"></i> Room ' + escapeHtml(num) + ' (' + escapeHtml(type) + ')';
+            display.style.borderStyle = 'solid';
+            display.style.borderColor = 'var(--primary)';
+            display.style.color = 'var(--dark)';
+            display.style.background = '#fff';
+        } else {
+            display.textContent = 'No room selected';
+            display.style.borderStyle = 'dashed';
+            display.style.borderColor = '#cbd5e1';
+            display.style.color = '#64748b';
+            display.style.background = '#f8fafc';
+        }
+    }
+
+    // Called whenever the available-room list changes: drops stale
+    // selections, refreshes the display, and re-renders the open modal.
+    function syncRoomPicker() {
+        const roomSelect = document.getElementById('room_id');
+        const availableIds = readRoomsFromSelect().map(r => String(r.id));
+        if (roomSelect.value && !availableIds.includes(String(roomSelect.value))) {
+            roomSelect.value = '';
+        }
+        if (!roomSelect.value && roomSelect.options.length) {
+            roomSelect.selectedIndex = 0;
+        }
+        updateSelectedRoomDisplay();
+        const modal = document.getElementById('roomPickerModal');
+        if (modal && modal.style.display === 'block') {
+            renderRoomGrid();
+        }
+    }
+
+    function openRoomPicker() {
+        if (!document.getElementById('duration_type').value) {
+            alert('Please select a Duration of Stay first.');
+            return;
+        }
+        renderRoomGrid();
+        document.getElementById('roomPickerModal').style.display = 'block';
+    }
+
+    function closeRoomPicker() {
+        document.getElementById('roomPickerModal').style.display = 'none';
+    }
+
+    function renderRoomGrid() {
+        const grid = document.getElementById('room_grid');
+        const summary = document.getElementById('room_picker_summary');
+        const roomSelect = document.getElementById('room_id');
+        const duration = document.getElementById('duration_type').value;
+        const rooms = readRoomsFromSelect();
+
+        if (summary) {
+            summary.textContent = rooms.length
+                ? rooms.length + ' room' + (rooms.length > 1 ? 's' : '') + ' available · ' + duration
+                : 'No rooms available for the selected dates.';
+        }
+        grid.innerHTML = '';
+        rooms.forEach(r => {
+            const price = roomPriceForDuration(r, duration);
+            const priceText = (price.value === null || price.value === '' || price.value === undefined)
+                ? 'Price on request'
+                : '₱' + Number(price.value).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + price.label;
+            const box = document.createElement('div');
+            box.className = 'room-box' + (String(r.id) === String(roomSelect.value) ? ' selected' : '');
+            box.innerHTML =
+                '<div class="room-box-number">Room ' + escapeHtml(r.room_number) + '</div>' +
+                '<div class="room-box-type">' + escapeHtml(r.room_type) + '</div>' +
+                '<div class="room-box-meta">' + escapeHtml(priceText) + '<br>' + escapeHtml(r.capacity) + ' guest' + (String(r.capacity) === '1' ? '' : 's') + '</div>';
+            box.onclick = (function(id) { return function() { selectRoom(id); }; })(r.id);
+            grid.appendChild(box);
+        });
+    }
+
+    function selectRoom(id) {
+        const roomSelect = document.getElementById('room_id');
+        roomSelect.value = id;
+        updateSelectedRoomDisplay();
+        closeRoomPicker();
+        calculateCheckout(true);
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeRoomPicker();
+    });
 
     let isFetchingRooms = false;
     function updateAvailableRooms() {
@@ -492,6 +629,7 @@ include 'header.php';
                     data.rooms.forEach(r => {
                         const opt = document.createElement('option');
                         opt.value = r.id;
+                        opt.setAttribute('data-number', r.room_number);
                         opt.setAttribute('data-type', r.room_type);
                         opt.setAttribute('data-capacity', r.capacity);
                         opt.setAttribute('data-p3', r.price_3h !== null ? r.price_3h : '');
@@ -514,6 +652,7 @@ include 'header.php';
                 }
                 
                 isFetchingRooms = false;
+                syncRoomPicker();
                 calculateCheckout(false);
             })
             .catch(err => {
@@ -549,17 +688,25 @@ include 'header.php';
         }
 
         if (duration) {
-            // Enable room select now that a duration is chosen
+            // Enable room picker now that a duration is chosen
             roomSelect.disabled = false;
-            roomSelect.style.opacity = '1';
-            roomSelect.style.cursor = 'default';
+            const chooseBtn = document.getElementById('choose_room_btn');
+            if (chooseBtn) {
+                chooseBtn.disabled = false;
+                chooseBtn.style.opacity = '1';
+                chooseBtn.style.cursor = 'pointer';
+            }
             numGuestsInput.disabled = false;
             numGuestsInput.style.opacity = '1';
             if (roomHint) roomHint.style.display = 'none';
         } else {
             roomSelect.disabled = true;
-            roomSelect.style.opacity = '0.5';
-            roomSelect.style.cursor = 'not-allowed';
+            const chooseBtn = document.getElementById('choose_room_btn');
+            if (chooseBtn) {
+                chooseBtn.disabled = true;
+                chooseBtn.style.opacity = '0.5';
+                chooseBtn.style.cursor = 'not-allowed';
+            }
             numGuestsInput.disabled = true;
             numGuestsInput.style.opacity = '0.5';
             if (roomHint) roomHint.style.display = 'block';
@@ -712,8 +859,68 @@ include 'header.php';
     });
     document.getElementById('duration_type').addEventListener('change', () => onDurationChange());
     document.getElementById('room_id').addEventListener('change', () => calculateCheckout(true));
+    document.getElementById('roomPickerModal').addEventListener('click', function(e) {
+        if (e.target === this) closeRoomPicker();
+    });
+    document.getElementById('booking_form').addEventListener('submit', function(e) {
+        if (!document.getElementById('room_id').value) {
+            e.preventDefault();
+            openRoomPicker();
+        }
+    });
     document.getElementById('num_guests').addEventListener('change', () => calculateCheckout(false));
 </script>
+
+<!-- Room Picker Modal -->
+<style>
+    .room-box {
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px 10px;
+        text-align: center;
+        cursor: pointer;
+        background: #f8fafc;
+        transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+    }
+    .room-box:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-sm);
+    }
+    .room-box.selected {
+        border-color: var(--primary);
+        background: rgba(var(--primary-rgb), 0.07);
+        box-shadow: var(--shadow-sm);
+    }
+    .room-box-number { font-size: 1.15rem; font-weight: 700; color: var(--dark); }
+    .room-box.selected .room-box-number { color: var(--primary); }
+    .room-box-type {
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #fff;
+        background: #0dcaf0;
+        border-radius: 20px;
+        padding: 2px 10px;
+        margin: 6px 0;
+    }
+    .room-box-meta { font-size: 0.78rem; color: #64748b; line-height: 1.5; }
+</style>
+<div id="roomPickerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; overflow-y:auto;">
+    <div style="background:#fff; width:620px; max-width:92%; margin:6% auto; border-radius:10px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 20px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+            <h3 style="margin:0; font-size:1.2rem;"><i class='bx bx-bed' style="color:var(--primary);"></i> Choose a Room</h3>
+            <button type="button" onclick="closeRoomPicker()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#64748b;">&times;</button>
+        </div>
+        <div style="padding:20px;">
+            <p id="room_picker_summary" style="margin:0 0 12px 0; font-size:0.85rem; color:#64748b;"></p>
+            <div id="room_grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:12px;"></div>
+        </div>
+        <div style="padding:12px 20px; border-top:1px solid #e2e8f0; text-align:right; background:#f8fafc;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeRoomPicker()">Cancel</button>
+        </div>
+    </div>
+</div>
 
 <?php include 'calendar_modal.php'; ?>
 
